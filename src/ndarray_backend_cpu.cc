@@ -61,9 +61,25 @@ void Compact(const AlignedArray& a, AlignedArray* out, std::vector<int32_t> shap
    *  void (you need to modify out directly, rather than returning anything; this is true for all the
    *  function will implement here, so we won't repeat this note.)
    */
-  /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
-  /// END SOLUTION
+  std::vector<int32_t> counter(shape.size(), 0);
+
+  int32_t index = 0;
+  while(counter[0] < shape[0]){
+    int32_t a_index = offset;
+    for(int32_t i = 0; i < shape.size(); i++){
+      a_index += counter[i] * strides[i];
+    }
+
+    out->ptr[index] = a.ptr[a_index];
+
+    ++counter.back();
+    for (int32_t i = shape.size() - 1; i > 0 && counter[i]==shape[i]; i--){
+        ++counter[i - 1];
+        counter[i] = 0;
+    }
+
+    ++index;
+  }
 }
 
 void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<int32_t> shape,
@@ -78,9 +94,26 @@ void EwiseSetitem(const AlignedArray& a, AlignedArray* out, std::vector<int32_t>
    *   strides: strides of the *out* array (not a, which has compact strides)
    *   offset: offset of the *out* array (not a, which has zero offset, being compact)
    */
-  /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
-  /// END SOLUTION
+  
+  std::vector<int32_t> counter(shape.size(), 0);
+
+  int32_t index = 0;
+  while(counter[0] < shape[0]){
+    int32_t out_index = offset;
+    for(int32_t i = 0; i < shape.size(); i++){
+      out_index += counter[i] * strides[i];
+    }
+
+    out->ptr[out_index] = a.ptr[index];
+
+    ++counter.back();
+    for (int32_t i = shape.size() - 1; i > 0 && counter[i]==shape[i]; i--){
+        ++counter[i - 1];
+        counter[i] = 0;
+    }
+
+    ++index;
+  }
 }
 
 void ScalarSetitem(const size_t size, scalar_t val, AlignedArray* out, std::vector<int32_t> shape,
@@ -99,9 +132,22 @@ void ScalarSetitem(const size_t size, scalar_t val, AlignedArray* out, std::vect
    *   offset: offset of the out array
    */
 
-  /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
-  /// END SOLUTION
+  std::vector<int32_t> counter(shape.size(), 0);
+
+  while(counter[0] < shape[0]){
+    int32_t out_index = offset;
+    for(int32_t i = 0; i < shape.size(); i++){
+      out_index += counter[i] * strides[i];
+    }
+
+    out->ptr[out_index] = val;
+
+    ++counter.back();
+    for (int32_t i = shape.size() - 1; i > 0 && counter[i]==shape[i]; i--){
+        ++counter[i - 1];
+        counter[i] = 0;
+    }
+  }
 }
 
 void EwiseAdd(const AlignedArray& a, const AlignedArray& b, AlignedArray* out) {
