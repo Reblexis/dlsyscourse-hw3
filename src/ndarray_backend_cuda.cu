@@ -398,18 +398,21 @@ void EwiseTanh(const CudaArray& a, CudaArray* out) {
 // Elementwise and scalar operations
 ////////////////////////////////////////////////////////////////////////////////
 
-__global__ void MatmulKernel(const scalar_t* a, scalar_t* b, scalar_t* out, size_t out_size) {
+__global__ void MatmulKernel(const scalar_t* a, scalar_t* b, scalar_t* out, size_t m, size_t n,
+                             size_t p) {
   size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
 
-  if (gid >= out_size) return;
+  if (gid >= m*p) return;
+  
+  int32_t i = gid / p;
+  int32_t j = gid % p;
 
-  scalar_t max_val = a[gid * reduce_size];
-
-  for (size_t i = 1; i < reduce_size; i++) {
-    max_val = max(max_val, a[gid * reduce_size + i]);
+  scalar_t sum = 0;
+  for (int32_t k = 0; k < n; k++) {
+    sum += a[i * n + k] * b[k * p + j];
   }
 
-  out[gid] = max_val;  
+  out[i * p + j] = sum;
 }
 
 void Matmul(const CudaArray& a, const CudaArray& b, CudaArray* out, uint32_t M, uint32_t N,
@@ -436,9 +439,9 @@ void Matmul(const CudaArray& a, const CudaArray& b, CudaArray* out, uint32_t M, 
    *   P: columns of b / out
    */
 
-  /// BEGIN SOLUTION
-  assert(false && "Not Implemented");
-  /// END SOLUTION
+  CudaDims dim = CudaOneDim(out->size);
+
+  MatmulKernel<<<dim.grid, dim.block>>>(a.ptr, b.ptr, out->ptr, out->size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
